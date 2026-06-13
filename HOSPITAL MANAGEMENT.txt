@@ -1,0 +1,85 @@
+from abc import ABC, abstractmethod
+class Person(ABC):
+    def __init__(self, id, name, age, phone):
+        self.id, self.name, self.age, self.phone = id, name, age, phone
+    @abstractmethod
+    def display(self): pass
+class Doctor(Person):
+    def __init__(self, id, name, age, phone, spec, fee):
+        super().__init__(id, name, age, phone)
+        self.spec, self.__fee = spec, fee
+    def get_fee(self): return self.__fee
+    def display(self):
+        print(self.id, self.name, self.spec, self.__fee)
+class Patient(Person):
+    def __init__(self, id, name, age, phone, disease):
+        super().__init__(id, name, age, phone)
+        self.disease, self.status, self.history = disease, "Admitted", []
+    def display(self):
+        print(self.id, self.name, self.disease, self.status)
+doctors, patients, appointments = {}, {}, []
+revenue = 0
+def valid_phone(p):
+    if not p.isdigit() or len(p) != 10:
+        raise ValueError("Invalid phone")
+def add_doctor():
+    i = input("ID: ")
+    if i in doctors: return print("Exists")
+    n, a, p = input("Name: "), int(input("Age: ")), input("Phone: ")
+    valid_phone(p)
+    s, f = input("Spec: "), float(input("Fee: "))
+    doctors[i] = Doctor(i, n, a, p, s, f)
+def add_patient():
+    i = input("ID: ")
+    if i in patients: return print("Exists")
+    n, a, p = input("Name: "), int(input("Age: ")), input("Phone: ")
+    valid_phone(p)
+    d = input("Disease: ")
+    patients[i] = Patient(i, n, a, p, d)
+def view(data):
+    if not data: return print("Empty")
+    for x in data.values(): x.display()
+def book():
+    i = input("Appt ID: ")
+    if any(a["id"] == i for a in appointments):
+        return print("Exists")
+    d, p = input("Doctor ID: "), input("Patient ID: ")
+    if d not in doctors or p not in patients:
+        return print("Invalid IDs")
+    date, time = input("Date: "), input("Time: ")
+    if any(a["doc"] == d and a["date"] == date and a["time"] == time for a in appointments):
+        return print("Slot taken")
+    appointments.append({"id": i, "doc": d, "pat": p, "date": date, "time": time, "status": "Scheduled"})
+def bill():
+    global revenue
+    p = input("Patient ID: ")
+    appts = [a for a in appointments if a["pat"] == p]
+    if not appts: return print("No appointment")
+    doc = doctors[appts[-1]["doc"]]
+    total = doc.get_fee() + float(input("Medicine: ")) + float(input("Lab: "))
+    revenue += total
+    print("Total:", total)
+def discharge():
+    p = input("Patient ID: ")
+    if p in patients:
+        if patients[p].status == "Discharged":
+            print("Already discharged")
+        else:
+            patients[p].status = "Discharged"
+doctors["D1"] = Doctor("D1", "Ravi", 45, "9876543210", "Cardio", 1000)
+patients["P1"] = Patient("P1", "Kumar", 30, "9876543222", "Fever")
+while True:
+    print("\n1.Add Doc 2.Add Pat 3.View Doc 4.View Pat 5.Book 6.Bill 7.Discharge 8.Exit")
+    c = input("Choice: ")
+    try:
+        if c == "1": add_doctor()
+        elif c == "2": add_patient()
+        elif c == "3": view(doctors)
+        elif c == "4": view(patients)
+        elif c == "5": book()
+        elif c == "6": bill()
+        elif c == "7": discharge()
+        elif c == "8": break
+        else: print("Invalid")
+    except Exception as e:
+        print("Error:", e)
